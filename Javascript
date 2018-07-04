@@ -1,1 +1,76 @@
+// Load up the discord.js library
+const Discord = require("discord.js");
 
+// This is your client. Some people call it `bot`, some people call it `self`, 
+// some might call it `cootchie`. Either way, when you see `client.something`, or `bot.something`,
+// this is what we're refering to. Your client.
+const client = new Discord.Client();
+
+// Here we load the config.json file that contains our token and our prefix values. 
+const config = require("./config.json");
+// config.token contains the bot's token
+// config.prefix contains the message prefix.
+
+client.on("ready", () => {
+  // This event will run if the bot starts, and logs in, successfully.
+  console.log(`Bot has started, with ${client.users.size} users, in ${client.channels.size} channels of ${client.guilds.size} guilds.`); 
+  // Example of changing the bot's playing game to something useful. `client.user` is what the
+  // docs refer to as the "ClientUser".
+  client.user.setActivity(`Fait Top 1`);
+});
+
+client.on("guildCreate", guild => {
+  // This event triggers when the bot joins a guild.
+  console.log(`New guild joined: ${guild.name} (id: ${guild.id}). This guild has ${guild.memberCount} members!`);
+  client.user.setActivity(`Fait Top 1`);
+});
+
+client.on("guildDelete", guild => {
+  // this event triggers when the bot is removed from a guild.
+  console.log(`I have been removed from: ${guild.name} (id: ${guild.id})`);
+  client.user.setActivity(`Fait Top 1`);
+});
+client.on("message", async message => {  
+  // and not get into a spam loop
+  if(message.author.bot) return;
+  
+  // Ignore any message that does not start with our prefix, 
+  if(message.content.indexOf(config.prefix) !== 0) return;
+  
+  // Here we separate our "command" name, and our "arguments" for the command. 
+  const args = message.content.slice(config.prefix.length).trim().split(/ +/g);
+  const command = args.shift().toLowerCase();
+    
+  if (command == "help"){
+    message.channel.send("---===== Help Bot Fortnite =====--- \nCommands:\n+ping | pong\n+randloc | Donne un zone aleatoire sur la map de Fortnite");
+        
+  }
+  
+  if(command === "ping") {
+    // Calculates ping between sending a message and editing it, giving a nice round-trip latency.
+    // The second ping is an average latency between the bot and the websocket server (one-way, not round-trip)
+    const m = await message.channel.send("Ping?");
+    m.edit(`Pong! Latency is ${m.createdTimestamp - message.createdTimestamp}ms. API Latency is ${Math.round(client.ping)}ms`);
+  }
+  
+  if (command == "randloc"){
+    const inWater = ["A:1", "E:1", "F:1", "G:1", "J:1", "A:2", "J:2", "A:3", "A:7", "A:8", "B:8", "C:8", "A:9", "B:9", "C:9", "J:9", "A:10", "B:10", "C:10", "H:10", "I:10", "J:10"]
+    const possible = "ABCDEFGHIJ";
+    
+    // while true until location is not in inWater
+    while (true){
+    
+        var randNum = Math.floor(Math.random() * 10) + 1 //10 since 10 tiles on map + 1 exclude 0
+        var randLet = possible.charAt(Math.floor(Math.random() * possible.length));    
+        
+        var fullLoc = `${randLet}:${randNum}` //String format saved in a variable of the loc
+        if (!(inWater.indexOf(fullLoc) > -1)){ //checks if not in inWater
+            message.delete().catch(O_o=>{});   // Delete msg sent by user
+            return message.channel.send(`Random Location: ${fullLoc}`); //Stops loop and sends msg
+        }
+    }
+  }
+  
+});
+
+client.login(config.token);
